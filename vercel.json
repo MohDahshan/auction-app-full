@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "auction-app-frontend",
   "builds": [
     {
       "src": "package.json",
