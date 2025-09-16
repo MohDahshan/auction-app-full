@@ -42,25 +42,6 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
     endedAuctions.find(a => a.id === auctionIdStr) ||
     auction;
 
-  // Log fresh auction data for debugging WebSocket updates
-  console.log('🔄 AuctionCard render - Fresh auction data:', {
-    auctionId: auction.id,
-    auctionIdStr: auctionIdStr,
-    originalBid: auction.currentBid,
-    freshBid: freshAuction.currentBid,
-    originalBidders: auction.bidders,
-    freshBidders: freshAuction.bidders,
-    originalTimeLeft: auction.timeLeft,
-    freshTimeLeft: freshAuction.timeLeft,
-    foundInContext: freshAuction !== auction,
-    freshAuctionObject: freshAuction,
-    originalAuctionObject: auction,
-    contextIds: {
-      live: liveAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })),
-      upcoming: upcomingAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })),
-      ended: endedAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders }))
-    }
-  });
   
   // Use timeLeft from fresh auction (updated via WebSocket)
   const [timeLeft, setTimeLeft] = useState(freshAuction.timeLeft || 0);
@@ -183,7 +164,12 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Market Price</span>
-                <span className="text-gray-900">SAR {auction.marketPrice}</span>
+                <span className="text-gray-900">SAR {freshAuction.marketPrice || auction.marketPrice}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Min Wallet</span>
+                <span className="text-gray-900">{freshAuction.minWallet || auction.minWallet} coins</span>
               </div>
               
               {userTotalBid > 0 && isParticipating && (

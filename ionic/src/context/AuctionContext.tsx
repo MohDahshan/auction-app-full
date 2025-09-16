@@ -418,25 +418,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           const oldAuction = prev[existingIndex];
           const newAuction = { ...oldAuction, ...updatedAuctionData };
           
-          console.log('🔄 Updating upcoming auction - Field by field comparison:', {
-            auctionId: updatedAuctionData.id,
-            title: { old: oldAuction.title, new: newAuction.title, changed: oldAuction.title !== newAuction.title },
-            entryFee: { old: oldAuction.entryFee, new: newAuction.entryFee, changed: oldAuction.entryFee !== newAuction.entryFee },
-            minWallet: { old: oldAuction.minWallet, new: newAuction.minWallet, changed: oldAuction.minWallet !== newAuction.minWallet },
-            currentBid: { old: oldAuction.currentBid, new: newAuction.currentBid, changed: oldAuction.currentBid !== newAuction.currentBid },
-            bidders: { old: oldAuction.bidders, new: newAuction.bidders, changed: oldAuction.bidders !== newAuction.bidders },
-            marketPrice: { old: oldAuction.marketPrice, new: newAuction.marketPrice, changed: oldAuction.marketPrice !== newAuction.marketPrice }
-          });
-          
           const updated = prev.map(a => a.id === updatedAuctionData.id ? newAuction : a);
-          console.log('🔄 Updated upcoming auctions:', updated.map(a => ({ 
-            id: a.id, 
-            title: a.title,
-            entryFee: a.entryFee,
-            minWallet: a.minWallet,
-            bid: a.currentBid, 
-            bidders: a.bidders 
-          })));
           return updated;
         }
         return prev;
