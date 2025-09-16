@@ -29,6 +29,11 @@ class WebSocketService {
     const wsUrl = (import.meta as any).env.VITE_WS_URL || 'wss://auction-app-backend-production.up.railway.app';
     
     console.log('🔌 Connecting to WebSocket:', wsUrl);
+    console.log('🔌 Environment check:', {
+      VITE_WS_URL: (import.meta as any).env.VITE_WS_URL,
+      NODE_ENV: (import.meta as any).env.NODE_ENV,
+      MODE: (import.meta as any).env.MODE
+    });
     
     this.socket = io(wsUrl, {
       transports: ['websocket', 'polling'],
