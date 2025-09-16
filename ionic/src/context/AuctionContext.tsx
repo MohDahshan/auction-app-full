@@ -397,7 +397,8 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       auctionId: updatedAuctionData.id,
       currentBid: updatedAuctionData.currentBid,
       bidders: updatedAuctionData.bidders,
-      timeLeft: updatedAuctionData.timeLeft
+      timeLeft: updatedAuctionData.timeLeft,
+      status: updatedAuctionData.status
     });
     
     console.log('🔄 Before update - Current context state:', {
@@ -407,23 +408,40 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       liveAuctions: liveAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders }))
     });
     
-    setUpcomingAuctions(prev => {
-      const updated = updateAuctionInArray(prev, updatedAuctionData);
-      console.log('🔄 Updated upcoming auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
-      return updated;
-    });
+    // Only update the auction in the correct list based on its status
+    const auctionStatus = updatedAuctionData.status;
     
-    setLiveAuctions(prev => {
-      const updated = updateAuctionInArray(prev, updatedAuctionData);
-      console.log('🔄 Updated live auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
-      return updated;
-    });
-    
-    setEndedAuctions(prev => {
-      const updated = updateAuctionInArray(prev, updatedAuctionData);
-      console.log('🔄 Updated ended auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
-      return updated;
-    });
+    if (auctionStatus === 'upcoming') {
+      setUpcomingAuctions(prev => {
+        const existingIndex = prev.findIndex(a => a.id === updatedAuctionData.id);
+        if (existingIndex !== -1) {
+          const updated = prev.map(a => a.id === updatedAuctionData.id ? { ...a, ...updatedAuctionData } : a);
+          console.log('🔄 Updated upcoming auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+          return updated;
+        }
+        return prev;
+      });
+    } else if (auctionStatus === 'live') {
+      setLiveAuctions(prev => {
+        const existingIndex = prev.findIndex(a => a.id === updatedAuctionData.id);
+        if (existingIndex !== -1) {
+          const updated = prev.map(a => a.id === updatedAuctionData.id ? { ...a, ...updatedAuctionData } : a);
+          console.log('🔄 Updated live auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+          return updated;
+        }
+        return prev;
+      });
+    } else if (auctionStatus === 'ended') {
+      setEndedAuctions(prev => {
+        const existingIndex = prev.findIndex(a => a.id === updatedAuctionData.id);
+        if (existingIndex !== -1) {
+          const updated = prev.map(a => a.id === updatedAuctionData.id ? { ...a, ...updatedAuctionData } : a);
+          console.log('🔄 Updated ended auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+          return updated;
+        }
+        return prev;
+      });
+    }
   };
 
   // Delete auction from all lists (upcoming, live, ended)
