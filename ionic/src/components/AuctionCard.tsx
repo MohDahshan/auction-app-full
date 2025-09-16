@@ -100,8 +100,8 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
       return;
     }
     
-   // Check if user has enough coins for entry fee
-   if (userCoins < auction.entryFee) {
+   // Check if user has enough coins for entry fee - use freshAuction for updated data
+   if (userCoins < (freshAuction.entryFee || auction.entryFee)) {
      console.log('❌ Not enough coins for entry fee, showing top-up modal');
      setShowTopupModal(true);
      return;
@@ -203,7 +203,7 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
 
         <div className="mt-4 space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Entry: {auction.entryFee} coins</span>
+            <span className="text-gray-600">Entry: {freshAuction.entryFee || auction.entryFee} coins</span>
             <span className="text-gray-600">Your wallet: {userCoins} coins</span>
           </div>
           
@@ -217,7 +217,7 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
                   : 'bg-gray-600 cursor-not-allowed'
               }`}
             >
-             {timeLeft === 0 ? 'Auction Ended' : `Join Auction (${auction.entryFee} coins)`}
+             {timeLeft === 0 ? 'Auction Ended' : `Join Auction (${freshAuction.entryFee || auction.entryFee} coins)`}
             </button>
           ) : (
             <div className="space-y-2">
