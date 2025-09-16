@@ -4,7 +4,7 @@ import { useAuction } from '../context/AuctionContext';
 import { CoinPackagesModal } from './CoinPackagesModal';
 
 interface Auction {
-  id: number;
+  id: string | number; // Support both UUID strings and numbers
   title: string;
   image: string;
   currentBid: number;

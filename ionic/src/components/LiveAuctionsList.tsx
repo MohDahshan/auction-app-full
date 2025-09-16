@@ -65,19 +65,15 @@ export const LiveAuctionsList: React.FC<LiveAuctionsListProps> = ({ onJoinAuctio
     <div className="space-y-4">
       {liveAuctions.map((auction) => {
         // Transform context auction to match AuctionCard expectations
-        // Handle ID conversion safely
-        const auctionId = parseInt(auction.id);
-        const safeId = isNaN(auctionId) ? 0 : auctionId;
-        
+        // Keep ID as string (UUID) - don't convert to number
         console.log('🔴 LiveAuctionsList - Processing auction:', {
           originalId: auction.id,
-          parsedId: auctionId,
-          safeId: safeId,
-          isNaN: isNaN(auctionId)
+          idType: typeof auction.id,
+          isUUID: auction.id.includes('-')
         });
         
         const transformedAuction = {
-          id: safeId,
+          id: auction.id, // Keep as string UUID
           title: auction.title,
           image: auction.image,
           currentBid: auction.currentBid || 45,

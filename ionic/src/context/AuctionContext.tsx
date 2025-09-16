@@ -32,22 +32,22 @@ interface AuctionContextType {
     avatar: string;
   };
   user: User | null;
-  joinedAuctions: Set<number>;
-  userBids: { [auctionId: number]: number };
+  joinedAuctions: Set<string | number>;
+  userBids: { [auctionId: string | number]: number };
   // Auction management
   upcomingAuctions: Auction[];
   liveAuctions: Auction[];
   endedAuctions: Auction[];
   auctionCountdowns: { [auctionId: string]: number };
   // Methods
-  placeBid: (auctionId: number, amount: number) => Promise<boolean>;
+  placeBid: (auctionId: string | number, amount: number) => Promise<boolean>;
   addCoins: (amount: number) => void;
   logout: () => Promise<void>;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
-  joinAuction: (auctionId: number, entryFee: number) => Promise<boolean>;
-  isParticipatingInAuction: (auctionId: number) => boolean;
-  getUserBidForAuction: (auctionId: number) => number;
+  joinAuction: (auctionId: string | number, entryFee: number) => Promise<boolean>;
+  isParticipatingInAuction: (auctionId: string | number) => boolean;
+  getUserBidForAuction: (auctionId: string | number) => number;
   // Auction management methods
   moveAuctionToLive: (auctionId: string) => void;
   moveAuctionToEnded: (auctionId: string) => void;
@@ -74,8 +74,8 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(500);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [joinedAuctions, setJoinedAuctions] = useState<Set<number>>(new Set());
-  const [userBids, setUserBids] = useState<{ [auctionId: number]: number }>({});
+  const [joinedAuctions, setJoinedAuctions] = useState<Set<string | number>>(new Set());
+  const [userBids, setUserBids] = useState<{ [auctionId: string | number]: number }>({});
   const [userProfile, setUserProfile] = useState({
     name: '',
     avatar: ''
@@ -169,7 +169,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     checkAuthStatus();
   }, []);
 
-  const joinAuction = async (auctionId: number, entryFee: number): Promise<boolean> => {
+  const joinAuction = async (auctionId: string | number, entryFee: number): Promise<boolean> => {
     console.log('🎯 JOIN AUCTION:', { auctionId, entryFee, userCoins, isLoggedIn });
     
     if (!isLoggedIn) {
@@ -214,11 +214,11 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     }
   };
 
-  const isParticipatingInAuction = (auctionId: number): boolean => {
+  const isParticipatingInAuction = (auctionId: string | number): boolean => {
     return joinedAuctions.has(auctionId);
   };
 
-  const placeBid = async (auctionId: number, amount: number): Promise<boolean> => {
+  const placeBid = async (auctionId: string | number, amount: number): Promise<boolean> => {
     console.log('🎯 PLACE BID:', { 
       auctionId, 
       amount, 
@@ -272,7 +272,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     }
   };
 
-  const getUserBidForAuction = (auctionId: number): number => {
+  const getUserBidForAuction = (auctionId: string | number): number => {
     return userBids[auctionId] || 0;
   };
 
