@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Users, TrendingDown } from 'lucide-react';
 import { useAuction } from '../context/AuctionContext';
-import { apiService } from '../services/api';
 
 export const ConcludedAuctionsList: React.FC = () => {
   const { endedAuctions } = useAuction();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Log ended auctions for debugging WebSocket updates
+  console.log('🟢 ConcludedAuctionsList render - Ended auctions:', {
+    count: endedAuctions.length,
+    auctions: endedAuctions.map(a => ({
+      id: a.id,
+      title: a.title,
+      finalBid: a.finalBid,
+      currentBid: a.currentBid,
+      winner: a.winner,
+      bidders: a.bidders,
+      savings: a.savings
+    }))
+  });
+
   useEffect(() => {
-    // Data is now loaded by AuctionContext, just set loading to false
+    // Data is loaded by AuctionContext, just set loading to false
     setLoading(false);
   }, [endedAuctions]);
 

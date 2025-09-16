@@ -27,24 +27,45 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
     joinAuction, 
     isParticipatingInAuction, 
     getUserBidForAuction,
-    isLoggedIn 
+    isLoggedIn,
+    liveAuctions,
+    upcomingAuctions,
+    endedAuctions
   } = useAuction();
   
-  // Use timeLeft from auction prop (updated via WebSocket)
-  const [timeLeft, setTimeLeft] = useState(auction.timeLeft || 0);
+  // Get fresh auction data from context (updated via WebSocket)
+  const freshAuction =
+    liveAuctions.find(a => a.id === auction.id.toString()) ||
+    upcomingAuctions.find(a => a.id === auction.id.toString()) ||
+    endedAuctions.find(a => a.id === auction.id.toString()) ||
+    auction;
+
+  // Log fresh auction data for debugging WebSocket updates
+  console.log('🔄 AuctionCard render - Fresh auction data:', {
+    auctionId: auction.id,
+    originalBid: auction.currentBid,
+    freshBid: freshAuction.currentBid,
+    originalBidders: auction.bidders,
+    freshBidders: freshAuction.bidders,
+    originalTimeLeft: auction.timeLeft,
+    freshTimeLeft: freshAuction.timeLeft
+  });
+  
+  // Use timeLeft from fresh auction (updated via WebSocket)
+  const [timeLeft, setTimeLeft] = useState(freshAuction.timeLeft || 0);
   
   const isParticipating = isParticipatingInAuction(auction.id);
   const userTotalBid = getUserBidForAuction(auction.id);
   
-  // Simulate others' bids (in real app, this would come from server)
-  const othersHighestBid = auction.currentBid;
+  // Use fresh auction data (updated via WebSocket)
+  const othersHighestBid = freshAuction.currentBid || auction.currentBid;
   const displayBid = Math.max(othersHighestBid, userTotalBid);
   const isUserHighestBidder = userTotalBid > 0 && userTotalBid >= othersHighestBid;
 
-  // Update timeLeft when auction prop changes (from WebSocket updates)
+  // Update timeLeft when fresh auction changes (from WebSocket updates)
   useEffect(() => {
-    setTimeLeft(auction.timeLeft || 0);
-  }, [auction.timeLeft]);
+    setTimeLeft(freshAuction.timeLeft || 0);
+  }, [freshAuction.timeLeft]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -139,7 +160,7 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
               </div>
               <div className="flex items-center space-x-1">
                 <Users size={16} />
-                <span>{auction.bidders}</span>
+                <span>{freshAuction.bidders || auction.bidders}</span>
               </div>
             </div>
             

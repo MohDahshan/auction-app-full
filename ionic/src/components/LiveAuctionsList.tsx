@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuctionCard } from './AuctionCard';
 import { useAuction } from '../context/AuctionContext';
-import { apiService } from '../services/api';
 
 interface LiveAuctionsListProps {
   onJoinAuction: (auction: any) => void;
@@ -12,8 +11,20 @@ export const LiveAuctionsList: React.FC<LiveAuctionsListProps> = ({ onJoinAuctio
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Log live auctions for debugging WebSocket updates
+  console.log('🔴 LiveAuctionsList render - Live auctions:', {
+    count: liveAuctions.length,
+    auctions: liveAuctions.map(a => ({
+      id: a.id,
+      title: a.title,
+      currentBid: a.currentBid,
+      bidders: a.bidders,
+      timeLeft: a.timeLeft
+    }))
+  });
+
   useEffect(() => {
-    // Data is now loaded by AuctionContext, just set loading to false
+    // Data is loaded by AuctionContext, just set loading to false
     setLoading(false);
   }, [liveAuctions]);
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, Bell, BellRing } from 'lucide-react';
 import { useAuction } from '../context/AuctionContext';
-import { apiService } from '../services/api';
 
 export const UpcomingAuctionsList: React.FC = () => {
   const { 
@@ -14,8 +13,20 @@ export const UpcomingAuctionsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Set<string>>(new Set());
 
+  // Log upcoming auctions for debugging WebSocket updates
+  console.log('🟡 UpcomingAuctionsList render - Upcoming auctions:', {
+    count: upcomingAuctions.length,
+    auctions: upcomingAuctions.map(a => ({
+      id: a.id,
+      title: a.title,
+      bidders: a.bidders,
+      entryFee: a.entryFee,
+      countdown: auctionCountdowns[a.id]
+    }))
+  });
+
   useEffect(() => {
-    // Data is now loaded by AuctionContext, just set loading to false
+    // Data is loaded by AuctionContext, just set loading to false
     setLoading(false);
   }, [upcomingAuctions]);
 
