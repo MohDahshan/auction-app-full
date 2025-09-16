@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Users } from 'lucide-react';
 import { apiService } from '../services/api';
+import webSocketService from '../services/websocket';
 
 export const ConcludedAuctionsList: React.FC = () => {
   const [concludedAuctions, setConcludedAuctions] = useState<any[]>([]);
@@ -48,6 +49,83 @@ export const ConcludedAuctionsList: React.FC = () => {
     };
 
     fetchConcludedAuctions();
+
+    // WebSocket event listeners for real-time updates
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated (concluded list):', data);
+      if (data.auction) {
+        setConcludedAuctions(prev => {
+          const auctionExists = prev.find(auction => auction.id === data.auction.id);
+          if (auctionExists) {
+            const updatedAuctions = prev.map(auction => {
+              if (auction.id === data.auction.id) {
+                return {
+                  ...auction,
+                  title: data.auction.title || auction.title,
+                  finalBid: data.auction.final_bid || data.auction.current_bid || auction.finalBid,
+                  marketPrice: data.auction.product_market_price || data.auction.market_price || auction.marketPrice,
+                  winner: data.auction.winner_name || auction.winner,
+                  bidders: data.auction.total_participants || auction.bidders,
+                  savings: Math.max(0, (data.auction.product_market_price || auction.marketPrice) - ((data.auction.final_bid || auction.finalBid) * 10)),
+                  endTime: data.auction.end_time || auction.endTime,
+                  startTime: data.auction.start_time || auction.startTime
+                };
+              }
+              return auction;
+            });
+            return updatedAuctions;
+          }
+          return prev;
+        });
+      }
+    };
+
+    const handleAuctionDeleted = (data: any) => {
+      console.log('🗑️ Auction deleted (concluded list):', data);
+      if (data.auctionId) {
+        setConcludedAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
+      }
+    };
+
+    const handleAuctionEnded = (data: any) => {
+      console.log('🏁 Auction ended, adding to concluded list:', data);
+      if (data.auction && (data.auction.status === 'ended' || data.auction.status === 'completed')) {
+        const transformedAuction = {
+          id: data.auction.id,
+          title: data.auction.title,
+          image: data.auction.product_image || data.auction.image_url || 'https://images.pexels.com/photos/205421/pexels-photo-205421.jpeg',
+          finalBid: data.auction.final_bid || data.auction.current_bid || data.auction.starting_bid,
+          marketPrice: data.auction.product_market_price || data.auction.market_price || 0,
+          winner: data.auction.winner_name || 'Winner',
+          bidders: data.auction.total_participants || 0,
+          savings: Math.max(0, (data.auction.product_market_price || 0) - ((data.auction.final_bid || 0) * 10)),
+          endedAgo: calculateTimeAgo(data.auction.end_time),
+          category: data.auction.product_category || data.auction.category || 'General',
+          endTime: data.auction.end_time,
+          startTime: data.auction.start_time
+        };
+
+        setConcludedAuctions(prev => {
+          const exists = prev.find(auction => auction.id === data.auction.id);
+          if (!exists) {
+            return [transformedAuction, ...prev].slice(0, 10);
+          }
+          return prev;
+        });
+      }
+    };
+
+    // Subscribe to WebSocket events
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction:deleted', handleAuctionDeleted);
+    webSocketService.on('auction_ended', handleAuctionEnded);
+
+    // Cleanup function
+    return () => {
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction:deleted', handleAuctionDeleted);
+      webSocketService.off('auction_ended', handleAuctionEnded);
+    };
   }, []);
 
   const calculateTimeAgo = (endTime: string): string => {
