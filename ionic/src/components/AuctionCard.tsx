@@ -53,10 +53,12 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
     originalTimeLeft: auction.timeLeft,
     freshTimeLeft: freshAuction.timeLeft,
     foundInContext: freshAuction !== auction,
+    freshAuctionObject: freshAuction,
+    originalAuctionObject: auction,
     contextIds: {
-      live: liveAuctions.map(a => a.id),
-      upcoming: upcomingAuctions.map(a => a.id),
-      ended: endedAuctions.map(a => a.id)
+      live: liveAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })),
+      upcoming: upcomingAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })),
+      ended: endedAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders }))
     }
   });
   

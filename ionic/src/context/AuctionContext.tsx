@@ -392,11 +392,38 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
 
   // Update auction data across all lists (upcoming, live, ended)
   const updateAuctionData = (updatedAuctionData: Auction) => {
-    console.log('🔄 Updating auction data:', updatedAuctionData);
+    console.log('🔄 Updating auction data in context:', {
+      updatedAuction: updatedAuctionData,
+      auctionId: updatedAuctionData.id,
+      currentBid: updatedAuctionData.currentBid,
+      bidders: updatedAuctionData.bidders,
+      timeLeft: updatedAuctionData.timeLeft
+    });
     
-    setUpcomingAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
-    setLiveAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
-    setEndedAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
+    console.log('🔄 Before update - Current context state:', {
+      liveAuctionsCount: liveAuctions.length,
+      upcomingAuctionsCount: upcomingAuctions.length,
+      endedAuctionsCount: endedAuctions.length,
+      liveAuctions: liveAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders }))
+    });
+    
+    setUpcomingAuctions(prev => {
+      const updated = updateAuctionInArray(prev, updatedAuctionData);
+      console.log('🔄 Updated upcoming auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+      return updated;
+    });
+    
+    setLiveAuctions(prev => {
+      const updated = updateAuctionInArray(prev, updatedAuctionData);
+      console.log('🔄 Updated live auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+      return updated;
+    });
+    
+    setEndedAuctions(prev => {
+      const updated = updateAuctionInArray(prev, updatedAuctionData);
+      console.log('🔄 Updated ended auctions:', updated.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders })));
+      return updated;
+    });
   };
 
   // Delete auction from all lists (upcoming, live, ended)
