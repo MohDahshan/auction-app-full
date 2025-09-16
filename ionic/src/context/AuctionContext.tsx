@@ -552,12 +552,13 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       }
     };
 
-    webSocketService.on('auctionUpdated', handleAuctionUpdated);
-    webSocketService.on('auctionDeleted', handleAuctionDeleted);
+    // Use correct event names that match WebSocket service
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction:deleted', handleAuctionDeleted);
 
     return () => {
-      webSocketService.off('auctionUpdated', handleAuctionUpdated);
-      webSocketService.off('auctionDeleted', handleAuctionDeleted);
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction:deleted', handleAuctionDeleted);
     };
   }, []);
 
