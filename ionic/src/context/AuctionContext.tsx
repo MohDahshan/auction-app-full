@@ -1,5 +1,28 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import apiService, { User } from '../services/api';
+import webSocketService from '../services/websocket';
+
+interface Auction {
+  id: string;
+  title: string;
+  image: string;
+  currentBid?: number;
+  marketPrice: number;
+  timeLeft?: number;
+  bidders: number;
+  entryFee: number;
+  minWallet: number;
+  description: string;
+  category: string;
+  status: 'upcoming' | 'live' | 'ended';
+  startTime: string;
+  endTime: string;
+  productName?: string;
+  finalBid?: number;
+  winner?: string;
+  savings?: number;
+  endedAgo?: string;
+}
 
 interface AuctionContextType {
   userCoins: number;
@@ -11,6 +34,12 @@ interface AuctionContextType {
   user: User | null;
   joinedAuctions: Set<number>;
   userBids: { [auctionId: number]: number };
+  // Auction management
+  upcomingAuctions: Auction[];
+  liveAuctions: Auction[];
+  endedAuctions: Auction[];
+  auctionCountdowns: { [auctionId: string]: number };
+  // Methods
   placeBid: (auctionId: number, amount: number) => Promise<boolean>;
   addCoins: (amount: number) => void;
   logout: () => Promise<void>;
@@ -19,6 +48,10 @@ interface AuctionContextType {
   joinAuction: (auctionId: number, entryFee: number) => Promise<boolean>;
   isParticipatingInAuction: (auctionId: number) => boolean;
   getUserBidForAuction: (auctionId: number) => number;
+  // Auction management methods
+  moveAuctionToLive: (auctionId: string) => void;
+  moveAuctionToEnded: (auctionId: string) => void;
+  updateAuctionCountdown: (auctionId: string, timeLeft: number) => void;
   loading: boolean;
   error: string | null;
 }
@@ -49,6 +82,12 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Auction management state
+  const [upcomingAuctions, setUpcomingAuctions] = useState<Auction[]>([]);
+  const [liveAuctions, setLiveAuctions] = useState<Auction[]>([]);
+  const [endedAuctions, setEndedAuctions] = useState<Auction[]>([]);
+  const [auctionCountdowns, setAuctionCountdowns] = useState<{ [auctionId: string]: number }>({});
 
   // Check for existing session on mount
   useEffect(() => {
@@ -295,6 +334,130 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     }
   };
 
+  // Auction management methods
+  const moveAuctionToLive = (auctionId: string) => {
+    console.log('🚀 Moving auction to live:', auctionId);
+    
+    setUpcomingAuctions(prev => {
+      const auction = prev.find(a => a.id === auctionId);
+      if (auction) {
+        // Update auction status and move to live
+        const updatedAuction = { ...auction, status: 'live' as const };
+        setLiveAuctions(livePrev => [updatedAuction, ...livePrev]);
+        
+        // Remove countdown for this auction
+        setAuctionCountdowns(countdownPrev => {
+          const updated = { ...countdownPrev };
+          delete updated[auctionId];
+          return updated;
+        });
+        
+        return prev.filter(a => a.id !== auctionId);
+      }
+      return prev;
+    });
+  };
+
+  const moveAuctionToEnded = (auctionId: string) => {
+    console.log('🏁 Moving auction to ended:', auctionId);
+    
+    setLiveAuctions(prev => {
+      const auction = prev.find(a => a.id === auctionId);
+      if (auction) {
+        // Update auction status and move to ended
+        const updatedAuction = { 
+          ...auction, 
+          status: 'ended' as const,
+          endedAgo: 'Just ended'
+        };
+        setEndedAuctions(endedPrev => [updatedAuction, ...endedPrev]);
+        
+        return prev.filter(a => a.id !== auctionId);
+      }
+      return prev;
+    });
+  };
+
+  const updateAuctionCountdown = (auctionId: string, timeLeft: number) => {
+    setAuctionCountdowns(prev => ({
+      ...prev,
+      [auctionId]: timeLeft
+    }));
+
+    // If countdown reaches 0, move to live
+    if (timeLeft <= 0) {
+      moveAuctionToLive(auctionId);
+    }
+  };
+
+  // WebSocket listeners for auction state changes
+  useEffect(() => {
+    const handleAuctionStatusChanged = (data: any) => {
+      console.log('🔄 Auction status changed in context:', data);
+      
+      if (data.auction) {
+        const auctionId = data.auction.id;
+        
+        if (data.auction.status === 'live') {
+          moveAuctionToLive(auctionId);
+        } else if (data.auction.status === 'ended') {
+          moveAuctionToEnded(auctionId);
+        }
+      }
+    };
+
+    const handleAuctionStarted = (data: any) => {
+      console.log('🚀 Auction started in context:', data);
+      if (data.auction) {
+        moveAuctionToLive(data.auction.id);
+      }
+    };
+
+    const handleAuctionEnded = (data: any) => {
+      console.log('🏁 Auction ended in context:', data);
+      if (data.auction) {
+        moveAuctionToEnded(data.auction.id);
+      }
+    };
+
+    // Subscribe to WebSocket events
+    webSocketService.on('auction_status_changed', handleAuctionStatusChanged);
+    webSocketService.on('auction_started', handleAuctionStarted);
+    webSocketService.on('auction_ended', handleAuctionEnded);
+
+    return () => {
+      webSocketService.off('auction_status_changed', handleAuctionStatusChanged);
+      webSocketService.off('auction_started', handleAuctionStarted);
+      webSocketService.off('auction_ended', handleAuctionEnded);
+    };
+  }, []);
+
+  // Countdown timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAuctionCountdowns(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+
+        Object.keys(updated).forEach(auctionId => {
+          if (updated[auctionId] > 0) {
+            updated[auctionId] -= 1;
+            hasChanges = true;
+          } else if (updated[auctionId] === 0) {
+            // Move auction to live when countdown reaches 0
+            moveAuctionToLive(auctionId);
+            delete updated[auctionId];
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? updated : prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <AuctionContext.Provider value={{ 
       userCoins, 
@@ -303,6 +466,12 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       userProfile, 
       joinedAuctions,
       userBids,
+      // Auction management
+      upcomingAuctions,
+      liveAuctions,
+      endedAuctions,
+      auctionCountdowns,
+      // Methods
       placeBid, 
       addCoins, 
       logout, 
@@ -311,6 +480,10 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       joinAuction,
       isParticipatingInAuction,
       getUserBidForAuction,
+      // Auction management methods
+      moveAuctionToLive,
+      moveAuctionToEnded,
+      updateAuctionCountdown,
       loading,
       error
     }}>
