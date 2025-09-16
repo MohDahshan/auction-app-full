@@ -191,22 +191,26 @@ export const UpcomingAuctions: React.FC = () => {
       console.log('🔄 Auction updated:', data);
       if (data.auction) {
         setAuctions(prev => {
-          const updatedAuctions = prev.map(auction => 
-            auction.id === data.auction.id ? data.auction : auction
-          );
-          
-          // Update time lefts for updated auction
-          if (data.auction.start_time || data.auction.startTime) {
-            const startTime = new Date(data.auction.start_time || data.auction.startTime).getTime();
-            const now = new Date().getTime();
-            const timeLeft = Math.max(0, Math.floor((startTime - now) / 1000));
-            setTimeLefts(prevTimes => ({
-              ...prevTimes,
-              [data.auction.id]: timeLeft
-            }));
+          const auctionExists = prev.find(auction => auction.id === data.auction.id);
+          if (auctionExists) {
+            const updatedAuctions = prev.map(auction => 
+              auction.id === data.auction.id ? { ...auction, ...data.auction } : auction
+            );
+            
+            // Update time lefts for updated auction
+            if (data.auction.start_time || data.auction.startTime) {
+              const startTime = new Date(data.auction.start_time || data.auction.startTime).getTime();
+              const now = new Date().getTime();
+              const timeLeft = Math.max(0, Math.floor((startTime - now) / 1000));
+              setTimeLefts(prevTimes => ({
+                ...prevTimes,
+                [data.auction.id]: timeLeft
+              }));
+            }
+            
+            return updatedAuctions;
           }
-          
-          return updatedAuctions;
+          return prev;
         });
       }
     };

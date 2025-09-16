@@ -120,10 +120,14 @@ export const ConcludedAuctions: React.FC = () => {
       console.log('🔄 Auction updated (concluded view):', data);
       if (data.auction) {
         setAuctions(prev => {
-          const updatedAuctions = prev.map(auction => 
-            auction.id === data.auction.id ? data.auction : auction
-          );
-          return updatedAuctions;
+          const auctionExists = prev.find(auction => auction.id === data.auction.id);
+          if (auctionExists) {
+            const updatedAuctions = prev.map(auction => 
+              auction.id === data.auction.id ? { ...auction, ...data.auction } : auction
+            );
+            return updatedAuctions;
+          }
+          return prev;
         });
       }
     };

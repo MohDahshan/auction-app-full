@@ -70,6 +70,34 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     fetchLiveAuctions();
 
     // WebSocket event listeners for real-time updates
+    const handleAuctionCreated = (data: any) => {
+      console.log('🆕 New auction created (live view):', data);
+      // Don't add to live auctions - they start as upcoming
+    };
+
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated (live view):', data);
+      if (data.auction) {
+        setAuctions(prev => {
+          const auctionExists = prev.find(auction => auction.id === data.auction.id);
+          if (auctionExists) {
+            const updatedAuctions = prev.map(auction => 
+              auction.id === data.auction.id ? { ...auction, ...data.auction } : auction
+            );
+            return updatedAuctions;
+          }
+          return prev;
+        });
+      }
+    };
+
+    const handleAuctionDeleted = (data: any) => {
+      console.log('🗑️ Auction deleted (live view):', data);
+      if (data.auctionId) {
+        setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
+      }
+    };
+
     const handleAuctionStarted = (data: any) => {
       console.log('🚀 New auction started, adding to live auctions:', data);
       setAuctions(prev => {
@@ -112,7 +140,7 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
             return [data.auction, ...prev].slice(0, 6);
           }
           return prev.map(auction => 
-            auction.id === data.auction.id ? data.auction : auction
+            auction.id === data.auction.id ? { ...auction, ...data.auction } : auction
           );
         });
       } else {
@@ -129,6 +157,9 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     };
 
     // Subscribe to WebSocket events
+    webSocketService.on('auction:created', handleAuctionCreated);
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction:deleted', handleAuctionDeleted);
     webSocketService.on('auction_started', handleAuctionStarted);
     webSocketService.on('auction_ended', handleAuctionEnded);
     webSocketService.on('bid_placed', handleBidPlaced);
@@ -137,6 +168,9 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
 
     // Cleanup function
     return () => {
+      webSocketService.off('auction:created', handleAuctionCreated);
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction:deleted', handleAuctionDeleted);
       webSocketService.off('auction_started', handleAuctionStarted);
       webSocketService.off('auction_ended', handleAuctionEnded);
       webSocketService.off('bid_placed', handleBidPlaced);
