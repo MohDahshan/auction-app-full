@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuctionCard } from './AuctionCard';
 import { apiService } from '../services/api';
-import { webSocketService } from '../services/websocket';
+import webSocketService from '../services/websocket';
 
 interface LiveAuctionsProps {
   onJoinAuction: (auction: any) => void;
