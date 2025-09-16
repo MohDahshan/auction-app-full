@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Users } from 'lucide-react';
 import { apiService } from '../services/api';
+import webSocketService from '../services/websocket';
 
 export const ConcludedAuctions: React.FC = () => {
   const [auctions, setAuctions] = useState<any[]>([]);
@@ -108,6 +109,77 @@ export const ConcludedAuctions: React.FC = () => {
     };
 
     fetchConcludedAuctions();
+
+    // WebSocket event listeners for real-time updates
+    const handleAuctionCreated = (data: any) => {
+      console.log('🆕 New auction created (concluded view):', data);
+      // Don't add to concluded auctions - they start as upcoming
+    };
+
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated (concluded view):', data);
+      if (data.auction) {
+        setAuctions(prev => {
+          const updatedAuctions = prev.map(auction => 
+            auction.id === data.auction.id ? data.auction : auction
+          );
+          return updatedAuctions;
+        });
+      }
+    };
+
+    const handleAuctionDeleted = (data: any) => {
+      console.log('🗑️ Auction deleted (concluded view):', data);
+      if (data.auctionId) {
+        setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
+      }
+    };
+
+    const handleAuctionEnded = (data: any) => {
+      console.log('🏁 Auction ended, adding to concluded:', data);
+      if (data.auction && (data.auction.status === 'ended' || data.auction.status === 'completed')) {
+        setAuctions(prev => {
+          const exists = prev.find(auction => auction.id === data.auction.id);
+          if (!exists) {
+            return [data.auction, ...prev].slice(0, 6);
+          }
+          return prev;
+        });
+      }
+    };
+
+    const handleAuctionStatusChanged = (data: any) => {
+      console.log('🔄 Auction status changed (concluded view):', data);
+      if (data.auction.status === 'ended' || data.auction.status === 'completed') {
+        // Add to concluded auctions if it became ended
+        setAuctions(prev => {
+          const exists = prev.find(auction => auction.id === data.auction.id);
+          if (!exists) {
+            return [data.auction, ...prev].slice(0, 6);
+          }
+          return prev;
+        });
+      } else {
+        // Remove from concluded auctions if status changed to something else
+        setAuctions(prev => prev.filter(auction => auction.id !== data.auction.id));
+      }
+    };
+
+    // Subscribe to WebSocket events
+    webSocketService.on('auction:created', handleAuctionCreated);
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction:deleted', handleAuctionDeleted);
+    webSocketService.on('auction_ended', handleAuctionEnded);
+    webSocketService.on('auction_status_changed', handleAuctionStatusChanged);
+
+    // Cleanup function
+    return () => {
+      webSocketService.off('auction:created', handleAuctionCreated);
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction:deleted', handleAuctionDeleted);
+      webSocketService.off('auction_ended', handleAuctionEnded);
+      webSocketService.off('auction_status_changed', handleAuctionStatusChanged);
+    };
   }, []);
 
   if (loading) {
