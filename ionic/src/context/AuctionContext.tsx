@@ -213,13 +213,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   };
 
   const placeBid = async (auctionId: string | number, amount: number): Promise<boolean> => {
-      auctionId, 
-      amount, 
-      userCoins, 
-      isLoggedIn,
-      isParticipating: isParticipatingInAuction(auctionId)
-    });
-    
     if (!isLoggedIn) {
       setError('Must be logged in to place bid');
       return false;

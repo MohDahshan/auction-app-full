@@ -12,6 +12,7 @@ export const LiveAuctionsList: React.FC<LiveAuctionsListProps> = ({ onJoinAuctio
   const [error, setError] = useState<string | null>(null);
 
   // Log live auctions for debugging WebSocket updates
+  console.log('🔴 LiveAuctionsList render - Live auctions:', {
     count: liveAuctions.length,
     auctions: liveAuctions.map(a => ({
       id: a.id,
@@ -65,6 +66,7 @@ export const LiveAuctionsList: React.FC<LiveAuctionsListProps> = ({ onJoinAuctio
       {liveAuctions.map((auction) => {
         // Transform context auction to match AuctionCard expectations
         // Keep ID as string (UUID) - don't convert to number
+        console.log('🔴 LiveAuctionsList - Processing auction:', {
           originalId: auction.id,
           idType: typeof auction.id,
           isUUID: auction.id.includes('-')

@@ -14,6 +14,7 @@ export const UpcomingAuctionsList: React.FC = () => {
   const [notifications, setNotifications] = useState<Set<string>>(new Set());
 
   // Log upcoming auctions for debugging WebSocket updates
+  console.log('🟡 UpcomingAuctionsList render - Upcoming auctions:', {
     count: upcomingAuctions.length,
     auctions: upcomingAuctions.map(a => ({
       id: a.id,
