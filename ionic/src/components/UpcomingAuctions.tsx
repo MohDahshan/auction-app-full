@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, Bell, BellRing } from 'lucide-react';
-import { useAuction } from '../context/AuctionContext';
 import { apiService } from '../services/api';
-import { webSocketService } from '../services/websocket';
+import webSocketService from '../services/websocket';
 
 export const UpcomingAuctions: React.FC = () => {
-  const { userCoins } = useAuction();
+  const userCoins = 1000; // Mock user coins for now
   const [auctions, setAuctions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,6 +163,66 @@ export const UpcomingAuctions: React.FC = () => {
     fetchUpcomingAuctions();
 
     // WebSocket event listeners for real-time updates
+    const handleAuctionCreated = (data: any) => {
+      console.log('🆕 New auction created:', data);
+      if (data.auction && data.auction.status === 'upcoming') {
+        setAuctions(prev => {
+          const exists = prev.find(auction => auction.id === data.auction.id);
+          if (!exists) {
+            const newAuctions = [data.auction, ...prev].slice(0, 6);
+            
+            // Update time lefts for new auction
+            const startTime = new Date(data.auction.start_time || data.auction.startTime).getTime();
+            const now = new Date().getTime();
+            const timeLeft = Math.max(0, Math.floor((startTime - now) / 1000));
+            setTimeLefts(prevTimes => ({
+              ...prevTimes,
+              [data.auction.id]: timeLeft
+            }));
+            
+            return newAuctions;
+          }
+          return prev;
+        });
+      }
+    };
+
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated:', data);
+      if (data.auction) {
+        setAuctions(prev => {
+          const updatedAuctions = prev.map(auction => 
+            auction.id === data.auction.id ? data.auction : auction
+          );
+          
+          // Update time lefts for updated auction
+          if (data.auction.start_time || data.auction.startTime) {
+            const startTime = new Date(data.auction.start_time || data.auction.startTime).getTime();
+            const now = new Date().getTime();
+            const timeLeft = Math.max(0, Math.floor((startTime - now) / 1000));
+            setTimeLefts(prevTimes => ({
+              ...prevTimes,
+              [data.auction.id]: timeLeft
+            }));
+          }
+          
+          return updatedAuctions;
+        });
+      }
+    };
+
+    const handleAuctionDeleted = (data: any) => {
+      console.log('🗑️ Auction deleted:', data);
+      if (data.auctionId) {
+        setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
+        setTimeLefts(prev => {
+          const updated = { ...prev };
+          delete updated[data.auctionId];
+          return updated;
+        });
+      }
+    };
+
     const handleAuctionStarted = (data: any) => {
       console.log('🚀 Auction started, removing from upcoming:', data);
       // Remove from upcoming auctions when it starts
@@ -198,45 +257,20 @@ export const UpcomingAuctions: React.FC = () => {
       }
     };
 
-    const handleAuctionsUpdated = (data: any) => {
-      console.log('📋 Upcoming auctions list updated:', data);
-      if (data.type === 'upcoming' && data.auctions) {
-        setAuctions(data.auctions.slice(0, 6));
-        
-        // Update time lefts for all auctions
-        const newTimeLefts: { [key: string]: number } = {};
-        data.auctions.slice(0, 6).forEach((auction: any) => {
-          const startTime = new Date(auction.start_time || auction.startTime).getTime();
-          const now = new Date().getTime();
-          const timeLeft = Math.max(0, Math.floor((startTime - now) / 1000));
-          newTimeLefts[auction.id] = timeLeft;
-        });
-        setTimeLefts(newTimeLefts);
-      }
-    };
-
-    const handleAuctionTimeUpdate = (data: any) => {
-      console.log('⏰ Auction time update:', data);
-      if (data.auctionId && data.timeLeft !== undefined) {
-        setTimeLefts(prev => ({
-          ...prev,
-          [data.auctionId]: data.timeLeft
-        }));
-      }
-    };
-
     // Subscribe to WebSocket events
+    webSocketService.on('auction:created', handleAuctionCreated);
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction:deleted', handleAuctionDeleted);
     webSocketService.on('auction_started', handleAuctionStarted);
     webSocketService.on('auction_status_changed', handleAuctionStatusChanged);
-    webSocketService.on('auctions_updated', handleAuctionsUpdated);
-    webSocketService.on('auction_time_update', handleAuctionTimeUpdate);
 
     // Cleanup function
     return () => {
+      webSocketService.off('auction:created', handleAuctionCreated);
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction:deleted', handleAuctionDeleted);
       webSocketService.off('auction_started', handleAuctionStarted);
       webSocketService.off('auction_status_changed', handleAuctionStatusChanged);
-      webSocketService.off('auctions_updated', handleAuctionsUpdated);
-      webSocketService.off('auction_time_update', handleAuctionTimeUpdate);
     };
   }, []);
 

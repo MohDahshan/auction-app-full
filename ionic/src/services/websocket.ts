@@ -97,6 +97,24 @@ class WebSocketService {
       console.log('📋 Auctions list updated:', data);
       this.emit('auctions_updated', data);
     });
+
+    // New auction created
+    this.socket.on('auction:created', (data: any) => {
+      console.log('🆕 New auction created:', data);
+      this.emit('auction:created', data);
+    });
+
+    // Auction updated
+    this.socket.on('auction:updated', (data: any) => {
+      console.log('🔄 Auction updated:', data);
+      this.emit('auction:updated', data);
+    });
+
+    // Auction deleted
+    this.socket.on('auction:deleted', (data: any) => {
+      console.log('🗑️ Auction deleted:', data);
+      this.emit('auction:deleted', data);
+    });
   }
 
   private handleReconnect() {
@@ -156,7 +174,7 @@ class WebSocketService {
   // Leave auction room
   leaveAuctionRoom(auctionId: string) {
     if (this.socket?.connected) {
-      console.log('🚪 Leaving auction room:', auctionId);
+      console.log('� Leaving auction room:', auctionId);
       this.socket.emit('leave_auction', { auctionId });
     }
   }
@@ -164,7 +182,7 @@ class WebSocketService {
   // Place bid via WebSocket
   placeBid(auctionId: string, bidAmount: number) {
     if (this.socket?.connected) {
-      console.log('💰 Placing bid via WebSocket:', { auctionId, bidAmount });
+      console.log('� Placing bid via WebSocket:', { auctionId, bidAmount });
       this.socket.emit('place_bid', { auctionId, bidAmount });
     }
   }
@@ -177,7 +195,7 @@ class WebSocketService {
   // Disconnect
   disconnect() {
     if (this.socket) {
-      console.log('🔌 Disconnecting WebSocket...');
+      console.log('� Disconnecting WebSocket...');
       this.socket.disconnect();
       this.socket = null;
     }
