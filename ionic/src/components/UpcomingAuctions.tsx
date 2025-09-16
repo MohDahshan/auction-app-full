@@ -22,7 +22,7 @@ export const UpcomingAuctions: React.FC = () => {
         let response;
         try {
           response = await apiService.getAuctions({ 
-            status: 'scheduled',
+            status: 'upcoming',
             limit: 6 
           });
         } catch (firstError) {

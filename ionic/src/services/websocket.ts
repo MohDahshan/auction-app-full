@@ -39,6 +39,9 @@ class WebSocketService {
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,
+      auth: {
+        token: 'guest' // Temporary guest token to bypass authentication
+      }
     });
 
     this.setupEventListeners();
