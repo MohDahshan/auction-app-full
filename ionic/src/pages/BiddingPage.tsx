@@ -44,6 +44,14 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
     userProfile 
   } = useAuction();
   
+  // State variables - defined first
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [showWinnerAnnouncement, setShowWinnerAnnouncement] = useState(false);
+  const [auctionWinner, setAuctionWinner] = useState<Bidder | null>(null);
+  const [hasShownWinnerAnnouncement, setHasShownWinnerAnnouncement] = useState(() => {
+    return localStorage.getItem(`winner_announcement_shown_${auction.id}`) === 'true';
+  });
+  
   // Initialize timer from localStorage or auction.timeLeft
   const [timeLeft, setTimeLeft] = useState(() => {
     const savedTimer = localStorage.getItem(`auction_${auction.id}_timer`);
@@ -279,13 +287,6 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
   const nextBidAmount = currentHighestBid + 2; // Always 2 SAR higher than current highest
   const canBid = isParticipating && timeLeft > 0 && !isUserHighestBidder;
   const profitPotential = auction.marketPrice - (currentBidSAR * 10);
-  
-  const [showTopupModal, setShowTopupModal] = useState(false);
-  const [showWinnerAnnouncement, setShowWinnerAnnouncement] = useState(false);
-  const [auctionWinner, setAuctionWinner] = useState<Bidder | null>(null);
-  const [hasShownWinnerAnnouncement, setHasShownWinnerAnnouncement] = useState(() => {
-    return localStorage.getItem(`winner_announcement_shown_${auction.id}`) === 'true';
-  });
 
   const handleCloseWinnerPopup = () => {
     setShowWinnerAnnouncement(false);
