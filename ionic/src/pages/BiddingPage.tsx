@@ -162,7 +162,6 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
 
     // WebSocket event listeners for real-time updates
     const handleBidPlaced = (data: any) => {
-      console.log('💰 Bid placed in auction page:', data);
       if (data.auctionId === auction.id.toString()) {
         // Add new bidder or update existing one
         setBidders(prev => {
@@ -195,7 +194,6 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
     };
 
     const handleAuctionUpdated = (data: any) => {
-      console.log('🔄 Auction updated in auction page:', data);
       if (data.auction && data.auction.id === auction.id.toString()) {
         // Update auction details if needed
         if (data.auction.end_time) {
@@ -206,7 +204,6 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
     };
 
     const handleAuctionEnded = (data: any) => {
-      console.log('🏁 Auction ended in auction page:', data);
       if (data.auction && data.auction.id === auction.id.toString()) {
         setTimeLeft(0);
         
@@ -248,11 +245,9 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
   };
 
   const handleJoinAuction = () => {
-    console.log('🎯 BiddingPage: Join auction clicked');
    
    // Check if user has enough coins for entry fee
    if (userCoins < auction.entryFee) {
-     console.log('❌ Not enough coins for entry fee, showing top-up modal');
      setShowTopupModal(true);
      return;
    }
@@ -261,26 +256,21 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
   };
 
   const handlePlaceBid = () => {
-    console.log('🎯 BiddingPage: Place bid clicked');
     
     if (!isParticipating) {
-      console.log('❌ Not participating in auction');
       return;
     }
     
     if (timeLeft <= 0) {
-      console.log('❌ Auction ended');
       return;
     }
     
     if (userCoins < nextBidAmount) {
-      console.log('❌ Not enough coins, showing top-up modal');
       setShowTopupModal(true);
       return;
     }
     
     const success = placeBid(auction.id, nextBidAmount);
-    console.log('🎯 Bid result:', success);
   };
 
   const canJoin = userCoins >= auction.entryFee;

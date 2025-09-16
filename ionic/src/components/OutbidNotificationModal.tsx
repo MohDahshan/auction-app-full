@@ -37,19 +37,16 @@ export const OutbidNotificationModal: React.FC<OutbidNotificationModalProps> = (
 
   const handleBidClick = () => {
     if (!isParticipating) {
-      console.log('❌ Not participating in auction');
       return;
     }
     
     if (userCoins >= nextBidAmount) {
       // Place the bid and go to bidding page
       const success = placeBid(auctionId, nextBidAmount);
-      console.log('🎯 Bid placement result:', success);
       if (success) {
         onBidHigher();
       }
     } else {
-      console.log('💳 Opening top-up modal - need more coins');
       setPendingBid(nextBidAmount);
       setShowTopupModal(true);
     }
@@ -60,7 +57,6 @@ export const OutbidNotificationModal: React.FC<OutbidNotificationModalProps> = (
     if (pendingBid) {
       // Place the bid automatically after top-up
       const success = placeBid(auctionId, pendingBid);
-      console.log('🎯 Auto-bid placement result:', success);
       setPendingBid(null);
       if (success) {
         onBidHigher(); // Navigate to bidding page

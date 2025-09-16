@@ -71,10 +71,8 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
   };
 
   const handleJoinAuction = () => {
-    console.log('🎯 AuctionCard: Join auction clicked');
     
     if (!isLoggedIn) {
-      console.log('❌ Not logged in, using onJoinAuction callback');
       if (onJoinAuction) {
         onJoinAuction(auction);
       }
@@ -83,46 +81,37 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
     
    // Check if user has enough coins for entry fee - use freshAuction for updated data
    if (userCoins < (freshAuction.entryFee || auction.entryFee)) {
-     console.log('❌ Not enough coins for entry fee, showing top-up modal');
      setShowTopupModal(true);
      return;
    }
    
     if (onJoinAuction) {
-      console.log('✅ Using onJoinAuction callback');
       onJoinAuction(auction);
     } else {
-      console.log('✅ Joining auction directly');
       joinAuction(auction.id, auction.entryFee);
     }
   };
 
   const handlePlaceBid = () => {
-    console.log('🎯 AuctionCard: Place bid clicked');
     
     if (!isLoggedIn) {
-      console.log('❌ Not logged in');
       return;
     }
     
     if (!isParticipating) {
-      console.log('❌ Not participating in auction');
       return;
     }
     
     if (timeLeft <= 0) {
-      console.log('❌ Auction ended');
       return;
     }
     
     if (userCoins < nextBidAmount) {
-      console.log('❌ Not enough coins, showing top-up modal');
       setShowTopupModal(true);
       return;
     }
     
     const success = placeBid(auction.id, nextBidAmount);
-    console.log('🎯 Bid result:', success);
   };
 
   const canJoin = isLoggedIn && userCoins >= auction.entryFee;

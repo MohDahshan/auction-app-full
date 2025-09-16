@@ -112,12 +112,10 @@ export const ConcludedAuctions: React.FC = () => {
 
     // WebSocket event listeners for real-time updates
     const handleAuctionCreated = (data: any) => {
-      console.log('🆕 New auction created (concluded view):', data);
       // Don't add to concluded auctions - they start as upcoming
     };
 
     const handleAuctionUpdated = (data: any) => {
-      console.log('🔄 Auction updated (concluded view):', data);
       if (data.auction) {
         setAuctions(prev => {
           const auctionExists = prev.find(auction => auction.id === data.auction.id);
@@ -133,14 +131,12 @@ export const ConcludedAuctions: React.FC = () => {
     };
 
     const handleAuctionDeleted = (data: any) => {
-      console.log('🗑️ Auction deleted (concluded view):', data);
       if (data.auctionId) {
         setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
       }
     };
 
     const handleAuctionEnded = (data: any) => {
-      console.log('🏁 Auction ended, adding to concluded:', data);
       if (data.auction && (data.auction.status === 'ended' || data.auction.status === 'completed')) {
         setAuctions(prev => {
           const exists = prev.find(auction => auction.id === data.auction.id);
@@ -153,7 +149,6 @@ export const ConcludedAuctions: React.FC = () => {
     };
 
     const handleAuctionStatusChanged = (data: any) => {
-      console.log('🔄 Auction status changed (concluded view):', data);
       if (data.auction.status === 'ended' || data.auction.status === 'completed') {
         // Add to concluded auctions if it became ended
         setAuctions(prev => {

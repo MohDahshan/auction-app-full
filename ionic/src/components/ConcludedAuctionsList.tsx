@@ -8,7 +8,6 @@ export const ConcludedAuctionsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Log ended auctions for debugging WebSocket updates
-  console.log('🟢 ConcludedAuctionsList render - Ended auctions:', {
     count: endedAuctions.length,
     auctions: endedAuctions.map(a => ({
       id: a.id,

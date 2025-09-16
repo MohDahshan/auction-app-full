@@ -164,7 +164,6 @@ export const UpcomingAuctions: React.FC = () => {
 
     // WebSocket event listeners for real-time updates
     const handleAuctionCreated = (data: any) => {
-      console.log('🆕 New auction created:', data);
       if (data.auction && data.auction.status === 'upcoming') {
         setAuctions(prev => {
           const exists = prev.find(auction => auction.id === data.auction.id);
@@ -188,7 +187,6 @@ export const UpcomingAuctions: React.FC = () => {
     };
 
     const handleAuctionUpdated = (data: any) => {
-      console.log('🔄 Auction updated:', data);
       if (data.auction) {
         setAuctions(prev => {
           const auctionExists = prev.find(auction => auction.id === data.auction.id);
@@ -216,7 +214,6 @@ export const UpcomingAuctions: React.FC = () => {
     };
 
     const handleAuctionDeleted = (data: any) => {
-      console.log('🗑️ Auction deleted:', data);
       if (data.auctionId) {
         setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
         setTimeLefts(prev => {
@@ -228,13 +225,11 @@ export const UpcomingAuctions: React.FC = () => {
     };
 
     const handleAuctionStarted = (data: any) => {
-      console.log('🚀 Auction started, removing from upcoming:', data);
       // Remove from upcoming auctions when it starts
       setAuctions(prev => prev.filter(auction => auction.id !== data.auction.id));
     };
 
     const handleAuctionStatusChanged = (data: any) => {
-      console.log('🔄 Auction status changed:', data);
       if (data.auction.status === 'live' || data.auction.status === 'active') {
         // Remove from upcoming auctions if it became live
         setAuctions(prev => prev.filter(auction => auction.id !== data.auction.id));

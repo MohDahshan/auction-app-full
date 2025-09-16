@@ -92,11 +92,9 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   // Load all auctions data
   const loadAllAuctions = async () => {
     try {
-      console.log('🔄 Loading all auctions from API...');
       const response = await apiService.getAllAuctions();
       
       if (response.success && response.data) {
-        console.log('✅ All auctions loaded:', response.data);
         
         // Set auction data from API
         setUpcomingAuctions(response.data.upcoming || []);
@@ -170,16 +168,13 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   }, []);
 
   const joinAuction = async (auctionId: string | number, entryFee: number): Promise<boolean> => {
-    console.log('🎯 JOIN AUCTION:', { auctionId, entryFee, userCoins, isLoggedIn });
     
     if (!isLoggedIn) {
-      console.log('❌ Cannot join - not logged in');
       setError('Must be logged in to join auction');
       return false;
     }
     
     if (joinedAuctions.has(auctionId)) {
-      console.log('✅ Already joined this auction');
       return true;
     }
     
@@ -201,7 +196,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           setUser(userResponse.data);
         }
         
-        console.log('✅ Successfully joined auction');
         return true;
       } else {
         setError(response.error || 'Failed to join auction');
@@ -219,7 +213,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   };
 
   const placeBid = async (auctionId: string | number, amount: number): Promise<boolean> => {
-    console.log('🎯 PLACE BID:', { 
       auctionId, 
       amount, 
       userCoins, 
@@ -228,13 +221,11 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     });
     
     if (!isLoggedIn) {
-      console.log('❌ Cannot bid - not logged in');
       setError('Must be logged in to place bid');
       return false;
     }
     
     if (!isParticipatingInAuction(auctionId)) {
-      console.log('❌ Cannot bid - not participating in auction');
       setError('Must join auction before bidding');
       return false;
     }
@@ -259,7 +250,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           setUser(userResponse.data);
         }
         
-        console.log('✅ Bid placed successfully');
         return true;
       } else {
         setError(response.error || 'Failed to place bid');
@@ -392,21 +382,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
 
   // Update auction data across all lists (upcoming, live, ended)
   const updateAuctionData = (updatedAuctionData: Auction) => {
-    console.log('🔄 Updating auction data in context:', {
-      updatedAuction: updatedAuctionData,
-      auctionId: updatedAuctionData.id,
-      currentBid: updatedAuctionData.currentBid,
-      bidders: updatedAuctionData.bidders,
-      timeLeft: updatedAuctionData.timeLeft,
-      status: updatedAuctionData.status
-    });
-    
-    console.log('🔄 Before update - Current context state:', {
-      liveAuctionsCount: liveAuctions.length,
-      upcomingAuctionsCount: upcomingAuctions.length,
-      endedAuctionsCount: endedAuctions.length,
-      liveAuctions: liveAuctions.map(a => ({ id: a.id, bid: a.currentBid, bidders: a.bidders }))
-    });
     
     // Only update the auction in the correct list based on its status
     const auctionStatus = updatedAuctionData.status;
@@ -430,25 +405,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           const oldAuction = prev[existingIndex];
           const newAuction = { ...oldAuction, ...updatedAuctionData };
           
-          console.log('🔄 Updating live auction - Field by field comparison:', {
-            auctionId: updatedAuctionData.id,
-            title: { old: oldAuction.title, new: newAuction.title, changed: oldAuction.title !== newAuction.title },
-            entryFee: { old: oldAuction.entryFee, new: newAuction.entryFee, changed: oldAuction.entryFee !== newAuction.entryFee },
-            minWallet: { old: oldAuction.minWallet, new: newAuction.minWallet, changed: oldAuction.minWallet !== newAuction.minWallet },
-            currentBid: { old: oldAuction.currentBid, new: newAuction.currentBid, changed: oldAuction.currentBid !== newAuction.currentBid },
-            bidders: { old: oldAuction.bidders, new: newAuction.bidders, changed: oldAuction.bidders !== newAuction.bidders },
-            marketPrice: { old: oldAuction.marketPrice, new: newAuction.marketPrice, changed: oldAuction.marketPrice !== newAuction.marketPrice }
-          });
-          
           const updated = prev.map(a => a.id === updatedAuctionData.id ? newAuction : a);
-          console.log('🔄 Updated live auctions:', updated.map(a => ({ 
-            id: a.id, 
-            title: a.title,
-            entryFee: a.entryFee,
-            minWallet: a.minWallet,
-            bid: a.currentBid, 
-            bidders: a.bidders 
-          })));
           return updated;
         }
         return prev;
@@ -460,25 +417,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           const oldAuction = prev[existingIndex];
           const newAuction = { ...oldAuction, ...updatedAuctionData };
           
-          console.log('🔄 Updating ended auction - Field by field comparison:', {
-            auctionId: updatedAuctionData.id,
-            title: { old: oldAuction.title, new: newAuction.title, changed: oldAuction.title !== newAuction.title },
-            entryFee: { old: oldAuction.entryFee, new: newAuction.entryFee, changed: oldAuction.entryFee !== newAuction.entryFee },
-            minWallet: { old: oldAuction.minWallet, new: newAuction.minWallet, changed: oldAuction.minWallet !== newAuction.minWallet },
-            currentBid: { old: oldAuction.currentBid, new: newAuction.currentBid, changed: oldAuction.currentBid !== newAuction.currentBid },
-            bidders: { old: oldAuction.bidders, new: newAuction.bidders, changed: oldAuction.bidders !== newAuction.bidders },
-            marketPrice: { old: oldAuction.marketPrice, new: newAuction.marketPrice, changed: oldAuction.marketPrice !== newAuction.marketPrice }
-          });
-          
           const updated = prev.map(a => a.id === updatedAuctionData.id ? newAuction : a);
-          console.log('🔄 Updated ended auctions:', updated.map(a => ({ 
-            id: a.id, 
-            title: a.title,
-            entryFee: a.entryFee,
-            minWallet: a.minWallet,
-            bid: a.currentBid, 
-            bidders: a.bidders 
-          })));
           return updated;
         }
         return prev;
@@ -488,7 +427,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
 
   // Delete auction from all lists (upcoming, live, ended)
   const deleteAuctionData = (auctionId: string) => {
-    console.log('🗑️ Deleting auction data:', auctionId);
     
     setUpcomingAuctions(prev => prev.filter(a => a.id !== auctionId));
     setLiveAuctions(prev => prev.filter(a => a.id !== auctionId));
@@ -497,7 +435,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
 
   // Auction management methods
   const moveAuctionToLive = (auctionId: string) => {
-    console.log('🚀 Moving auction to live:', auctionId);
     
     setUpcomingAuctions(prev => {
       const auction = prev.find(a => a.id === auctionId);
@@ -521,7 +458,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   };
 
   const moveAuctionToEnded = (auctionId: string) => {
-    console.log('🏁 Moving auction to ended:', auctionId);
     
     setLiveAuctions(prev => {
       const auction = prev.find(a => a.id === auctionId);
@@ -556,7 +492,6 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   // WebSocket listeners for auction state changes (existing listeners)
   useEffect(() => {
     const handleAuctionStatusChanged = (data: any) => {
-      console.log('🔄 Auction status changed in context:', data);
       
       if (data.auction) {
         const auctionId = data.auction.id;
@@ -570,14 +505,12 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     };
 
     const handleAuctionStarted = (data: any) => {
-      console.log('🚀 Auction started in context:', data);
       if (data.auction) {
         moveAuctionToLive(data.auction.id);
       }
     };
 
     const handleAuctionEnded = (data: any) => {
-      console.log('🏁 Auction ended in context:', data);
       if (data.auction) {
         moveAuctionToEnded(data.auction.id);
       }
@@ -599,14 +532,12 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   // WebSocket listeners for auction updates and deletion (new listeners)
   useEffect(() => {
     const handleAuctionUpdated = (data: any) => {
-      console.log('🔄 Auction updated via WebSocket:', data);
       if (data.auction) {
         updateAuctionData(data.auction);
       }
     };
 
     const handleAuctionDeleted = (data: any) => {
-      console.log('🗑️ Auction deleted via WebSocket:', data);
       if (data.auctionId) {
         deleteAuctionData(data.auctionId);
       }

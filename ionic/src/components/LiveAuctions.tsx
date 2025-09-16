@@ -71,12 +71,10 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
 
     // WebSocket event listeners for real-time updates
     const handleAuctionCreated = (data: any) => {
-      console.log('🆕 New auction created (live view):', data);
       // Don't add to live auctions - they start as upcoming
     };
 
     const handleAuctionUpdated = (data: any) => {
-      console.log('🔄 Auction updated (live view):', data);
       if (data.auction) {
         setAuctions(prev => {
           const auctionExists = prev.find(auction => auction.id === data.auction.id);
@@ -92,14 +90,12 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     };
 
     const handleAuctionDeleted = (data: any) => {
-      console.log('🗑️ Auction deleted (live view):', data);
       if (data.auctionId) {
         setAuctions(prev => prev.filter(auction => auction.id !== data.auctionId));
       }
     };
 
     const handleAuctionStarted = (data: any) => {
-      console.log('🚀 New auction started, adding to live auctions:', data);
       setAuctions(prev => {
         // Check if auction already exists
         const exists = prev.find(auction => auction.id === data.auction.id);
@@ -111,12 +107,10 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     };
 
     const handleAuctionEnded = (data: any) => {
-      console.log('🏁 Auction ended, removing from live auctions:', data);
       setAuctions(prev => prev.filter(auction => auction.id !== data.auction.id));
     };
 
     const handleBidPlaced = (data: any) => {
-      console.log('💰 Bid placed, updating auction:', data);
       setAuctions(prev => prev.map(auction => {
         if (auction.id === data.auctionId) {
           return {
@@ -131,7 +125,6 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     };
 
     const handleAuctionStatusChanged = (data: any) => {
-      console.log('🔄 Auction status changed:', data);
       if (data.auction.status === 'live') {
         // Add to live auctions if it became live
         setAuctions(prev => {
@@ -150,7 +143,6 @@ export const LiveAuctions: React.FC<LiveAuctionsProps> = ({ onJoinAuction }) => 
     };
 
     const handleAuctionsUpdated = (data: any) => {
-      console.log('📋 Live auctions list updated:', data);
       if (data.type === 'live' && data.auctions) {
         setAuctions(data.auctions.slice(0, 6));
       }
