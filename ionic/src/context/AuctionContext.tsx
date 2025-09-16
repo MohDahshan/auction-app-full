@@ -373,6 +373,62 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     }
   };
 
+  // Update auction data across all lists
+  const updateAuctionData = (updatedAuctionData: any) => {
+    console.log('🔄 Updating auction data:', updatedAuctionData);
+    
+    const auctionId = updatedAuctionData.id;
+    
+    // Helper function to update auction in array
+    const updateAuctionInArray = (auctions: Auction[], newData: any): Auction[] => {
+      const existingIndex = auctions.findIndex(a => a.id === auctionId);
+      
+      if (existingIndex !== -1) {
+        // Merge existing data with new data
+        const updatedAuction = {
+          ...auctions[existingIndex],
+          ...newData,
+          // Ensure proper data transformation
+          id: newData.id || auctions[existingIndex].id,
+          title: newData.title || auctions[existingIndex].title,
+          image: newData.image || newData.product_image || auctions[existingIndex].image,
+          currentBid: newData.currentBid || newData.current_bid || auctions[existingIndex].currentBid,
+          marketPrice: newData.marketPrice || newData.market_price || auctions[existingIndex].marketPrice,
+          bidders: newData.bidders || newData.total_participants || auctions[existingIndex].bidders,
+          entryFee: newData.entryFee || newData.entry_fee || auctions[existingIndex].entryFee,
+          minWallet: newData.minWallet || newData.min_wallet || auctions[existingIndex].minWallet,
+          description: newData.description || auctions[existingIndex].description,
+          category: newData.category || auctions[existingIndex].category,
+          status: newData.status || auctions[existingIndex].status,
+          startTime: newData.startTime || newData.start_time || auctions[existingIndex].startTime,
+          endTime: newData.endTime || newData.end_time || auctions[existingIndex].endTime,
+          productName: newData.productName || newData.product_name || auctions[existingIndex].productName,
+          finalBid: newData.finalBid || newData.final_bid || auctions[existingIndex].finalBid,
+          winner: newData.winner || newData.winner_name || auctions[existingIndex].winner,
+          savings: newData.savings || auctions[existingIndex].savings,
+          endedAgo: newData.endedAgo || auctions[existingIndex].endedAgo,
+          timeLeft: newData.timeLeft || auctions[existingIndex].timeLeft
+        };
+        
+        // Update the auction in place
+        const newAuctions = [...auctions];
+        newAuctions[existingIndex] = updatedAuction;
+        return newAuctions;
+      }
+      
+      return auctions; // No change if auction not found
+    };
+    
+    // Update in upcoming auctions
+    setUpcomingAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
+    
+    // Update in live auctions
+    setLiveAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
+    
+    // Update in ended auctions
+    setEndedAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
+  };
+
   // Auction management methods
   const moveAuctionToLive = (auctionId: string) => {
     console.log('🚀 Moving auction to live:', auctionId);
@@ -459,15 +515,27 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       }
     };
 
+    // NEW: Handle auction updates (bids, participant changes, etc.)
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated via WebSocket:', data);
+      
+      if (data.auction) {
+        // Update auction data across all lists using our smart merge function
+        updateAuctionData(data.auction);
+      }
+    };
+
     // Subscribe to WebSocket events
     webSocketService.on('auction_status_changed', handleAuctionStatusChanged);
     webSocketService.on('auction_started', handleAuctionStarted);
     webSocketService.on('auction_ended', handleAuctionEnded);
+    webSocketService.on('auctionUpdated', handleAuctionUpdated); // NEW listener
 
     return () => {
       webSocketService.off('auction_status_changed', handleAuctionStatusChanged);
       webSocketService.off('auction_started', handleAuctionStarted);
       webSocketService.off('auction_ended', handleAuctionEnded);
+      webSocketService.off('auctionUpdated', handleAuctionUpdated); // NEW cleanup
     };
   }, []);
 
