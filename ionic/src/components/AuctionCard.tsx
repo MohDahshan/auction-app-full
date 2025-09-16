@@ -34,21 +34,30 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction, onJoinAuction
   } = useAuction();
   
   // Get fresh auction data from context (updated via WebSocket)
+  // Handle both string and number IDs
+  const auctionIdStr = auction.id.toString();
   const freshAuction =
-    liveAuctions.find(a => a.id === auction.id.toString()) ||
-    upcomingAuctions.find(a => a.id === auction.id.toString()) ||
-    endedAuctions.find(a => a.id === auction.id.toString()) ||
+    liveAuctions.find(a => a.id === auctionIdStr) ||
+    upcomingAuctions.find(a => a.id === auctionIdStr) ||
+    endedAuctions.find(a => a.id === auctionIdStr) ||
     auction;
 
   // Log fresh auction data for debugging WebSocket updates
   console.log('🔄 AuctionCard render - Fresh auction data:', {
     auctionId: auction.id,
+    auctionIdStr: auctionIdStr,
     originalBid: auction.currentBid,
     freshBid: freshAuction.currentBid,
     originalBidders: auction.bidders,
     freshBidders: freshAuction.bidders,
     originalTimeLeft: auction.timeLeft,
-    freshTimeLeft: freshAuction.timeLeft
+    freshTimeLeft: freshAuction.timeLeft,
+    foundInContext: freshAuction !== auction,
+    contextIds: {
+      live: liveAuctions.map(a => a.id),
+      upcoming: upcomingAuctions.map(a => a.id),
+      ended: endedAuctions.map(a => a.id)
+    }
   });
   
   // Use timeLeft from fresh auction (updated via WebSocket)
