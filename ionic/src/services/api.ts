@@ -225,6 +225,20 @@ class ApiService {
     return this.request<any[]>(`/api/auctions/${id}/bids`);
   }
 
+  async getAllAuctions(): Promise<ApiResponse<{
+    upcoming: any[];
+    live: any[];
+    ended: any[];
+    featured: any[];
+  }>> {
+    return this.request<{
+      upcoming: any[];
+      live: any[];
+      ended: any[];
+      featured: any[];
+    }>('/api/auctions/all');
+  }
+
 
   // Product endpoints
   async getProducts(params?: {

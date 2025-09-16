@@ -15,37 +15,9 @@ export const UpcomingAuctionsList: React.FC = () => {
   const [notifications, setNotifications] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchUpcomingAuctions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await apiService.getAuctions({ 
-          status: 'upcoming',
-          limit: 10 
-        });
-        
-        if (response.success && response.data) {
-          // Initialize countdowns for upcoming auctions
-          response.data.forEach((auction: any) => {
-            const timeUntilStart = calculateTimeUntilStart(auction.start_time);
-            if (timeUntilStart > 0) {
-              updateAuctionCountdown(auction.id, timeUntilStart);
-            }
-          });
-        } else {
-          setError('Failed to load upcoming auctions');
-        }
-      } catch (err: any) {
-        console.error('Error fetching upcoming auctions:', err);
-        setError(err.message || 'Failed to load upcoming auctions');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUpcomingAuctions();
-  }, [updateAuctionCountdown]);
+    // Data is now loaded by AuctionContext, just set loading to false
+    setLoading(false);
+  }, [upcomingAuctions]);
 
   const calculateTimeUntilStart = (startTime: string): number => {
     const now = new Date().getTime();

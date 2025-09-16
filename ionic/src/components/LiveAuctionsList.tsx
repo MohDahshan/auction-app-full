@@ -13,32 +13,9 @@ export const LiveAuctionsList: React.FC<LiveAuctionsListProps> = ({ onJoinAuctio
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLiveAuctions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await apiService.getAuctions({ 
-          status: 'live',
-          limit: 10 
-        });
-        
-        if (response.success && response.data) {
-          // Data is now managed by context, so we just need to trigger loading
-          console.log('✅ Live auctions loaded from API');
-        } else {
-          setError('Failed to load live auctions');
-        }
-      } catch (err: any) {
-        console.error('Error fetching live auctions:', err);
-        setError(err.message || 'Failed to load live auctions');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLiveAuctions();
-  }, []);
+    // Data is now loaded by AuctionContext, just set loading to false
+    setLoading(false);
+  }, [liveAuctions]);
 
   if (loading) {
     return (

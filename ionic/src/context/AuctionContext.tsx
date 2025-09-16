@@ -89,6 +89,42 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
   const [endedAuctions, setEndedAuctions] = useState<Auction[]>([]);
   const [auctionCountdowns, setAuctionCountdowns] = useState<{ [auctionId: string]: number }>({});
 
+  // Load all auctions data
+  const loadAllAuctions = async () => {
+    try {
+      console.log('🔄 Loading all auctions from API...');
+      const response = await apiService.getAllAuctions();
+      
+      if (response.success && response.data) {
+        console.log('✅ All auctions loaded:', response.data);
+        
+        // Set auction data from API
+        setUpcomingAuctions(response.data.upcoming || []);
+        setLiveAuctions(response.data.live || []);
+        setEndedAuctions(response.data.ended || []);
+        
+        // Initialize countdowns for upcoming auctions
+        response.data.upcoming?.forEach((auction: any) => {
+          const timeUntilStart = calculateTimeUntilStart(auction.startTime);
+          if (timeUntilStart > 0) {
+            updateAuctionCountdown(auction.id, timeUntilStart);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ Failed to load all auctions:', error);
+    }
+  };
+
+  const calculateTimeUntilStart = (startTime: string): number => {
+    const now = new Date().getTime();
+    const start = new Date(startTime).getTime();
+    const difference = start - now;
+    
+    if (difference <= 0) return 0;
+    return Math.floor(difference / 1000); // Return seconds
+  };
+
   // Check for existing session on mount
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -123,6 +159,9 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       if (savedBids) {
         setUserBids(JSON.parse(savedBids));
       }
+      
+      // Load all auctions data
+      await loadAllAuctions();
       
       setLoading(false);
     };
