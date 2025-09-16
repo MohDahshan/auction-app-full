@@ -3,6 +3,7 @@ import { ArrowLeft, Clock, Users, Coins, Trophy, Target, TrendingUp, X } from 'l
 import { useAuction } from '../context/AuctionContext';
 import { WalletDisplay } from '../components/WalletDisplay';
 import { CoinPackagesModal } from '../components/CoinPackagesModal';
+import webSocketService from '../services/websocket';
 
 interface Auction {
   id: number;
@@ -151,8 +152,81 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [auction.id, timeLeft]);
+    // WebSocket event listeners for real-time updates
+    const handleBidPlaced = (data: any) => {
+      console.log('💰 Bid placed in auction page:', data);
+      if (data.auctionId === auction.id.toString()) {
+        // Add new bidder or update existing one
+        setBidders(prev => {
+          const existingBidderIndex = prev.findIndex(b => b.name === data.bidderName);
+          const newBidder: Bidder = {
+            id: Date.now(),
+            name: data.bidderName || 'Anonymous',
+            avatar: data.bidderName ? data.bidderName.substring(0, 2).toUpperCase() : 'AN',
+            bid: data.newBid,
+            timestamp: 'Just now',
+            isCurrentUser: data.bidderName === (userProfile.name || 'You')
+          };
+
+          if (existingBidderIndex >= 0) {
+            // Update existing bidder
+            const updated = [...prev];
+            updated[existingBidderIndex] = newBidder;
+            return updated.sort((a, b) => b.bid - a.bid);
+          } else {
+            // Add new bidder
+            return [newBidder, ...prev].sort((a, b) => b.bid - a.bid);
+          }
+        });
+
+        // Update time left if provided
+        if (data.timeLeft) {
+          setTimeLeft(data.timeLeft);
+        }
+      }
+    };
+
+    const handleAuctionUpdated = (data: any) => {
+      console.log('🔄 Auction updated in auction page:', data);
+      if (data.auction && data.auction.id === auction.id.toString()) {
+        // Update auction details if needed
+        if (data.auction.end_time) {
+          const newTimeLeft = Math.max(0, Math.floor((new Date(data.auction.end_time).getTime() - Date.now()) / 1000));
+          setTimeLeft(newTimeLeft);
+        }
+      }
+    };
+
+    const handleAuctionEnded = (data: any) => {
+      console.log('🏁 Auction ended in auction page:', data);
+      if (data.auction && data.auction.id === auction.id.toString()) {
+        setTimeLeft(0);
+        
+        // Determine winner and show announcement
+        const winner = bidders.length > 0 ? bidders[0] : null;
+        setAuctionWinner(winner);
+        
+        if (!hasShownWinnerAnnouncement) {
+          setShowWinnerAnnouncement(true);
+          setHasShownWinnerAnnouncement(true);
+          localStorage.setItem(`winner_announcement_shown_${auction.id}`, 'true');
+        }
+      }
+    };
+
+    // Subscribe to WebSocket events
+    webSocketService.on('bid_placed', handleBidPlaced);
+    webSocketService.on('auction:updated', handleAuctionUpdated);
+    webSocketService.on('auction_ended', handleAuctionEnded);
+
+    // Cleanup function
+    return () => {
+      clearInterval(timer);
+      webSocketService.off('bid_placed', handleBidPlaced);
+      webSocketService.off('auction:updated', handleAuctionUpdated);
+      webSocketService.off('auction_ended', handleAuctionEnded);
+    };
+  }, [auction.id, timeLeft, bidders, hasShownWinnerAnnouncement, userProfile.name]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -559,7 +633,7 @@ export const BiddingPage: React.FC<BiddingPageProps> = ({ auction, onBack }) => 
             </div>
 
             {/* Enhanced Fireworks Animation */}
-            <style jsx>{`
+            <style>{`
               .firework {
                 position: absolute;
                 width: 4px;
