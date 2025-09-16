@@ -373,60 +373,76 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     }
   };
 
-  // Update auction data across all lists
+  // Helper function to update auction in array
+  const updateAuctionInArray = (auctions: Auction[], newData: any): Auction[] => {
+    const auctionId = newData.id;
+    const existingIndex = auctions.findIndex(a => a.id === auctionId);
+    
+    if (existingIndex !== -1) {
+      // Found auction - merge existing data with new data using spread operator
+      const updatedAuction = {
+        ...auctions[existingIndex], // البيانات القديمة
+        ...newData,                 // البيانات الجديدة
+        // Ensure proper data transformation for different field formats
+        id: newData.id || auctions[existingIndex].id,
+        title: newData.title || auctions[existingIndex].title,
+        image: newData.image || newData.product_image || auctions[existingIndex].image,
+        currentBid: newData.currentBid || newData.current_bid || auctions[existingIndex].currentBid,
+        marketPrice: newData.marketPrice || newData.market_price || auctions[existingIndex].marketPrice,
+        bidders: newData.bidders || newData.total_participants || auctions[existingIndex].bidders,
+        entryFee: newData.entryFee || newData.entry_fee || auctions[existingIndex].entryFee,
+        minWallet: newData.minWallet || newData.min_wallet || auctions[existingIndex].minWallet,
+        description: newData.description || auctions[existingIndex].description,
+        category: newData.category || auctions[existingIndex].category,
+        status: newData.status || auctions[existingIndex].status,
+        startTime: newData.startTime || newData.start_time || auctions[existingIndex].startTime,
+        endTime: newData.endTime || newData.end_time || auctions[existingIndex].endTime,
+        productName: newData.productName || newData.product_name || auctions[existingIndex].productName,
+        finalBid: newData.finalBid || newData.final_bid || auctions[existingIndex].finalBid,
+        winner: newData.winner || newData.winner_name || auctions[existingIndex].winner,
+        savings: newData.savings || auctions[existingIndex].savings,
+        endedAgo: newData.endedAgo || auctions[existingIndex].endedAgo,
+        timeLeft: newData.timeLeft || auctions[existingIndex].timeLeft
+      };
+      
+      // Return new array with updated auction using spread operator
+      return [
+        ...auctions.slice(0, existingIndex),
+        updatedAuction,
+        ...auctions.slice(existingIndex + 1)
+      ];
+    }
+    
+    // Auction not found - return array as is (no change)
+    return auctions;
+  };
+
+  // Update auction data across all lists (upcoming, live, ended)
   const updateAuctionData = (updatedAuctionData: any) => {
     console.log('🔄 Updating auction data:', updatedAuctionData);
     
-    const auctionId = updatedAuctionData.id;
-    
-    // Helper function to update auction in array
-    const updateAuctionInArray = (auctions: Auction[], newData: any): Auction[] => {
-      const existingIndex = auctions.findIndex(a => a.id === auctionId);
-      
-      if (existingIndex !== -1) {
-        // Merge existing data with new data
-        const updatedAuction = {
-          ...auctions[existingIndex],
-          ...newData,
-          // Ensure proper data transformation
-          id: newData.id || auctions[existingIndex].id,
-          title: newData.title || auctions[existingIndex].title,
-          image: newData.image || newData.product_image || auctions[existingIndex].image,
-          currentBid: newData.currentBid || newData.current_bid || auctions[existingIndex].currentBid,
-          marketPrice: newData.marketPrice || newData.market_price || auctions[existingIndex].marketPrice,
-          bidders: newData.bidders || newData.total_participants || auctions[existingIndex].bidders,
-          entryFee: newData.entryFee || newData.entry_fee || auctions[existingIndex].entryFee,
-          minWallet: newData.minWallet || newData.min_wallet || auctions[existingIndex].minWallet,
-          description: newData.description || auctions[existingIndex].description,
-          category: newData.category || auctions[existingIndex].category,
-          status: newData.status || auctions[existingIndex].status,
-          startTime: newData.startTime || newData.start_time || auctions[existingIndex].startTime,
-          endTime: newData.endTime || newData.end_time || auctions[existingIndex].endTime,
-          productName: newData.productName || newData.product_name || auctions[existingIndex].productName,
-          finalBid: newData.finalBid || newData.final_bid || auctions[existingIndex].finalBid,
-          winner: newData.winner || newData.winner_name || auctions[existingIndex].winner,
-          savings: newData.savings || auctions[existingIndex].savings,
-          endedAgo: newData.endedAgo || auctions[existingIndex].endedAgo,
-          timeLeft: newData.timeLeft || auctions[existingIndex].timeLeft
-        };
-        
-        // Update the auction in place
-        const newAuctions = [...auctions];
-        newAuctions[existingIndex] = updatedAuction;
-        return newAuctions;
-      }
-      
-      return auctions; // No change if auction not found
-    };
-    
-    // Update in upcoming auctions
+    // Update in upcoming auctions using spread operator
     setUpcomingAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
     
-    // Update in live auctions
+    // Update in live auctions using spread operator
     setLiveAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
     
-    // Update in ended auctions
+    // Update in ended auctions using spread operator
     setEndedAuctions(prev => updateAuctionInArray(prev, updatedAuctionData));
+  };
+
+  // Delete auction from all lists (upcoming, live, ended)
+  const deleteAuctionData = (auctionId: string) => {
+    console.log('🗑️ Deleting auction data:', auctionId);
+    
+    // Remove from upcoming auctions using filter (returns new array)
+    setUpcomingAuctions(prev => prev.filter(auction => auction.id !== auctionId));
+    
+    // Remove from live auctions using filter (returns new array)
+    setLiveAuctions(prev => prev.filter(auction => auction.id !== auctionId));
+    
+    // Remove from ended auctions using filter (returns new array)
+    setEndedAuctions(prev => prev.filter(auction => auction.id !== auctionId));
   };
 
   // Auction management methods
@@ -447,6 +463,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
           return updated;
         });
         
+        // Return new array without the moved auction using filter
         return prev.filter(a => a.id !== auctionId);
       }
       return prev;
@@ -467,6 +484,7 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
         };
         setEndedAuctions(endedPrev => [updatedAuction, ...endedPrev]);
         
+        // Return new array without the moved auction using filter
         return prev.filter(a => a.id !== auctionId);
       }
       return prev;
@@ -515,13 +533,23 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
       }
     };
 
-    // NEW: Handle auction updates (bids, participant changes, etc.)
+    // Handle auction updates (bids, participant changes, etc.)
     const handleAuctionUpdated = (data: any) => {
       console.log('🔄 Auction updated via WebSocket:', data);
       
       if (data.auction) {
-        // Update auction data across all lists using our smart merge function
+        // Update auction data across all lists using smart merge function
         updateAuctionData(data.auction);
+      }
+    };
+
+    // Handle auction deletion
+    const handleAuctionDeleted = (data: any) => {
+      console.log('🗑️ Auction deleted via WebSocket:', data);
+      
+      if (data.auctionId) {
+        // Delete auction from all lists
+        deleteAuctionData(data.auctionId);
       }
     };
 
@@ -529,13 +557,16 @@ export const AuctionProvider: React.FC<AuctionProviderProps> = ({ children }) =>
     webSocketService.on('auction_status_changed', handleAuctionStatusChanged);
     webSocketService.on('auction_started', handleAuctionStarted);
     webSocketService.on('auction_ended', handleAuctionEnded);
-    webSocketService.on('auctionUpdated', handleAuctionUpdated); // NEW listener
+    webSocketService.on('auctionUpdated', handleAuctionUpdated);
+    webSocketService.on('auctionDeleted', handleAuctionDeleted);
 
+    // Cleanup function - unsubscribe from all events
     return () => {
       webSocketService.off('auction_status_changed', handleAuctionStatusChanged);
       webSocketService.off('auction_started', handleAuctionStarted);
       webSocketService.off('auction_ended', handleAuctionEnded);
-      webSocketService.off('auctionUpdated', handleAuctionUpdated); // NEW cleanup
+      webSocketService.off('auctionUpdated', handleAuctionUpdated);
+      webSocketService.off('auctionDeleted', handleAuctionDeleted);
     };
   }, []);
 
